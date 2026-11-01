@@ -306,6 +306,8 @@ number:
     # Hydro stoves
     boiler_setpoint:
       name: "Boiler setpoint"
+    puffer_setpoint:
+      name: "Puffer setpoint"
     # No read-back from the stove
     chrono_t1:
       name: "Chronothermostat T1"

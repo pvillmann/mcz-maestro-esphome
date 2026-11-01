@@ -64,6 +64,9 @@ NUMBERS = {
     ),
     # Boiler setpoint (hydro stoves)
     "boiler_setpoint": (HALF_OPT, 51, 27, 5, 90, 0.5, _temperature()),
+    # Puffer (buffer tank) setpoint (hydro stoves): parameter 52 = temperature x 2,
+    # read back from field 56 (e.g. 136 = 68 °C). Verified on an M°HYDRO 1.44 board.
+    "puffer_setpoint": (HALF, 52, 56, 40, 80, 1, _temperature()),
     # Chronothermostat temperatures: not part of the information frame, no read-back
     "chrono_t1": (HALF, 1108, NO_FIELD, 5, 35, 0.5, _temperature(config=True)),
     "chrono_t2": (HALF, 1109, NO_FIELD, 5, 35, 0.5, _temperature(config=True)),

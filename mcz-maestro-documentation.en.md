@@ -605,6 +605,7 @@ These entities are for hydro stoves, the boiler, the second ducted fan and the p
 | `sensor` | `pump_pwm` | Pump, raw value | 16 | |
 | `text_sensor` | `valve_3way` | 3-way valve: domestic hot water (1) / heating | 15 | |
 | `number` | `boiler_setpoint` | Boiler setpoint | 27 | 51 |
+| `number` | `puffer_setpoint` | Puffer (buffer tank) setpoint, value x 2, 40 to 80 °C | 56 | 52 |
 | `sensor` | `pellet_sensor_code` | Pellet sensor: 0 = no sensor, 10 = level OK, 11 = empty | 47 | |
 | `text_sensor` | `pellet_level` | Pellet level in plain text | 47 | |
 | `binary_sensor` | `pellet_empty` | Pellet tank empty | 47 | |
@@ -617,7 +618,7 @@ These entities are for hydro stoves, the boiler, the second ducted fan and the p
 | `number` | `antifreeze` | Antifreeze, raw value | 60 | 154 |
 | `button` | `reset_active` | Resets the Active function | | 2 = `255` |
 | `button` | `load_auger` | Loads the auger | | 34 = `49` |
-| `sensor` | `modbus_address`, `database_id`, `field_51`, `field_55`, `set_puffer`, `set_boiler`, `set_health` | Raw values, meaning not documented | 19, 31, 51, 55, 56 to 58 | |
+| `sensor` | `modbus_address`, `database_id`, `field_51`, `field_55`, `set_puffer`, `set_boiler`, `set_health` | Raw values, meaning not documented (`set_puffer` = puffer setpoint x 2, see `puffer_setpoint`) | 19, 31, 51, 55, 56 to 58 | |
 
 - These entities come from the maestrogateway table and **have not been tested**: the stove studied has none of these options.
 - For the optional temperatures, the value `255` is treated as "probe absent".

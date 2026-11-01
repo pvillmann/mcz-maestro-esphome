@@ -107,7 +107,7 @@ mcz_maestro:
 | `text_sensor` | `state`, `datetime`, `firmware`, `valve_3way`, `pellet_level`, `last_alarm`, `alarm_history`, `wifi_probe_last_seen`, `bootloader_version`, `wifi_direct_version`, `wifi_remote_version`, `wifi_probe_version`, `database_name`, `database_revision`, `serial_number` |
 | `switch` | `power`, `eco_mode`, `silent_mode`, `active_mode`, `chronothermostat`, `sounds`, `virtual_probe`, `pellet_sensor` |
 | `select` | `control_mode`, `fan`, `ducted_fan_1`, `ducted_fan_2`, `season_mode`, `air_recipe`, `pellet_recipe`, `room_input`, `wifi_probe_interval`, `wifi_probe_summer_interval`, `wifi_probe_offset` |
-| `number` | `setpoint`, `power`, `boiler_setpoint`, `chrono_t1` … `chrono_t3`, `profile`, `temperature_unit`, `sleep`, `antifreeze`, `eco_stop_delay`, `eco_stop_hysteresis` |
+| `number` | `setpoint`, `power`, `boiler_setpoint`, `puffer_setpoint`, `chrono_t1` … `chrono_t3`, `profile`, `temperature_unit`, `sleep`, `antifreeze`, `eco_stop_delay`, `eco_stop_hysteresis` |
 | `button` | `refresh`, `reset_alarm`, `set_time`, `reset_service`, `reset_active`, `load_auger` |
 
 The labels of a `select` can be translated; the keys are the values sent to the stove:

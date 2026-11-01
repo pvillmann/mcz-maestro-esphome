@@ -604,6 +604,7 @@ Ces entités concernent les poêles hydro, le ballon, la 2ᵉ canalisation et le
 | `sensor` | `pump_pwm` | Pompe, valeur brute | 16 | |
 | `text_sensor` | `valve_3way` | Vanne 3 voies : Sanitaire (1) / Chauffage | 15 | |
 | `number` | `boiler_setpoint` | Consigne du ballon | 27 | 51 |
+| `number` | `puffer_setpoint` | Consigne du ballon tampon, valeur x 2, 40 à 80 °C | 56 | 52 |
 | `sensor` | `pellet_sensor_code` | Capteur de pellets : 0 = absent, 10 = niveau correct, 11 = vide | 47 | |
 | `text_sensor` | `pellet_level` | Niveau de pellets en clair | 47 | |
 | `binary_sensor` | `pellet_empty` | Réservoir de pellets vide | 47 | |
@@ -616,7 +617,7 @@ Ces entités concernent les poêles hydro, le ballon, la 2ᵉ canalisation et le
 | `number` | `antifreeze` | Antigel, valeur brute | 60 | 154 |
 | `button` | `reset_active` | Réinitialise la fonction Active | | 2 = `255` |
 | `button` | `load_auger` | Charge la vis sans fin | | 34 = `49` |
-| `sensor` | `modbus_address`, `database_id`, `field_51`, `field_55`, `set_puffer`, `set_boiler`, `set_health` | Valeurs brutes, sens non documenté | 19, 31, 51, 55, 56 à 58 | |
+| `sensor` | `modbus_address`, `database_id`, `field_51`, `field_55`, `set_puffer`, `set_boiler`, `set_health` | Valeurs brutes, sens non documenté (`set_puffer` = consigne du ballon tampon x 2, voir `puffer_setpoint`) | 19, 31, 51, 55, 56 à 58 | |
 
 - Ces entités viennent de la table de maestrogateway et **n'ont pas été testées** : le poêle étudié n'a aucune de ces options.
 - Pour les températures optionnelles, la valeur `255` est traitée comme « sonde absente ».
