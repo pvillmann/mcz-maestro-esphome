@@ -1,0 +1,195 @@
+# MCZ Hydro-Pelletofen (Hauptplatine M°HYDRO 1.44), Cloud-Modul J5 „WIFI2“ (ESP-WROOM-02D)
+# Real im Einsatz, Entitätsnamen auf Deutsch. Getestet am Ofen: Ein/Aus, Puffer- und
+# Kessel-Sollwert, Uhrzeit setzen.
+#
+# Hinweise zum Hydro-Betrieb:
+# - Kein climate: Der Raum-Sollwert (Param. 42) ist im Hydro-Betrieb wirkungslos, und climate
+#   würde Param. 34 (Ein/Aus) doppelt zum switch schreiben.
+# - switch power: Die Platine lehnt das im Auto-Modus ab, ohne Rückmeldung. Erfolg am Zustand prüfen.
+#   Nur „Aus“ aus dem Brennbetrieb führt zu „Off“ (0). Aus Standby/Cooling endet der Ofen wieder in
+#   Standby (46). Standby zählt als „aus“.
+# - write_guard: In den ersten 20 s nach dem Boot wird nichts geschrieben.
+
+substitutions:
+  name: mcz-pelletofen
+  friendly_name: MCZ Pelletofen
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+
+esp8266:
+  board: esp_wroom_02
+
+external_components:
+  - source: github://pvillmann/mcz-maestro-esphome@main
+    components: [ mcz_maestro ]
+
+preferences:
+  flash_write_interval: never
+
+logger:
+  baud_rate: 0          # UART gehört dem Ofen
+  level: DEBUG
+
+api:
+  reboot_timeout: 14d
+  encryption:
+    key: !secret esphome_encryption_key
+
+ota:
+  - platform: esphome
+    encryption:
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  reboot_timeout: 14d
+  power_save_mode: none
+  ap:
+    ssid: ${name}-notfall
+    password: !secret ap_wifi_password
+
+captive_portal:
+
+time:
+  - platform: homeassistant
+    id: ha_time
+
+uart:
+  tx_pin: GPIO1
+  rx_pin: GPIO3
+  baud_rate: 115200
+  rx_buffer_size: 1024
+
+status_led:
+  pin: { number: GPIO13, inverted: true }
+
+mcz_maestro:
+  id: stove
+  update_interval: 15s
+  time_id: ha_time
+  write_guard: 20s
+
+sensor:
+  - platform: wifi_signal
+    name: "WLAN-Signal"
+    update_interval: 60s
+  - platform: uptime
+    name: "Laufzeit"
+  - platform: template
+    id: temp_einheit
+    name: "Temperatureinheit"
+    entity_category: diagnostic
+    accuracy_decimals: 0
+  - platform: mcz_maestro
+    ambient_temperature: { name: "Raumtemperatur" }
+    fume_temperature: { name: "Abgastemperatur" }
+    power_level: { name: "Leistungsstufe" }
+    state_code: { name: "Zustandscode" }
+    board_temperature: { name: "Platinentemperatur" }
+    fume_fan_rpm: { name: "Abgasgebläse" }
+    auger_rpm: { name: "Schnecke" }
+    auger_rpm_set: { name: "Schnecke Soll" }
+    active_set: { name: "Active Soll" }
+    active_live: { name: "Active gemessen" }
+    active_temperature: { name: "Active Temperatur" }
+    profile: { name: "Profil" }
+    total_hours: { name: "Betriebsstunden" }
+    # Betriebsstunden je Leistungsstufe (Felder 38–42) für die Wärmebilanz in HA
+    hours_power_1: { name: "Stunden Stufe 1", accuracy_decimals: 4, state_class: total_increasing }
+    hours_power_2: { name: "Stunden Stufe 2", accuracy_decimals: 4, state_class: total_increasing }
+    hours_power_3: { name: "Stunden Stufe 3", accuracy_decimals: 4, state_class: total_increasing }
+    hours_power_4: { name: "Stunden Stufe 4", accuracy_decimals: 4, state_class: total_increasing }
+    hours_power_5: { name: "Stunden Stufe 5", accuracy_decimals: 4, state_class: total_increasing }
+    hours_to_service: { name: "Stunden bis Wartung" }
+    ignitions: { name: "Zündungen" }
+    minutes_to_switch_off: { name: "Minuten bis Abschaltung" }
+    puffer_temperature: { name: "Puffer" }
+    boiler_temperature: { name: "Boiler" }
+    ntc3_temperature: { name: "NTC3" }
+    return_temperature: { name: "Rücklauf" }   # auf dieser Platine unbrauchbar, nur zur Beobachtung
+    pump_pwm: { name: "Pumpe" }
+    # Rohwerte (Komponente setzt entity_category diagnostic)
+    wifi_probe_1: { name: "WiFi-Sonde 1" }
+    wifi_probe_2: { name: "WiFi-Sonde 2" }
+    wifi_probe_3: { name: "WiFi-Sonde 3" }
+    pellet_sensor_code: { name: "Pelletsensor Code" }
+    database_id: { name: "Datenbank-ID" }
+    field_51: { name: "Feld 51 (Mode)" }
+    field_55: { name: "Feld 55 roh" }
+    set_health: { name: "Feld 58 roh" }
+    # Feld 57: Bedeutung offen
+    set_boiler: { name: "Feld 57 roh" }
+
+binary_sensor:
+  - platform: mcz_maestro
+    alarm: { name: "Alarm" }
+    brazier_dirty: { name: "Brennschale verschmutzt" }
+    igniter: { name: "Zünder" }
+    link: { name: "Verbindung Hauptplatine" }
+    pellet_empty: { name: "Pellets leer" }
+
+text_sensor:
+  - platform: mcz_maestro
+    state: { name: "Zustand" }
+    datetime: { name: "Ofen-Uhrzeit" }
+    firmware: { name: "Firmware Hauptplatine" }
+    valve_3way: { name: "3-Wege-Ventil" }
+    last_alarm: { name: "Letzter Alarm" }
+    wifi_remote_version: { name: "Version Cloud-Modul (gemeldet)" }
+    wifi_direct_version: { name: "Version Lokal-Modul" }
+  - platform: wifi_info
+    ssid: { name: "WLAN-SSID" }
+    bssid: { name: "WLAN-BSSID" }
+    ip_address: { name: "IP-Adresse" }
+    scan_results: { name: "WLAN-Scan" }
+
+number:
+  - platform: mcz_maestro
+    # Puffer-Sollwert: Param. 52 ×2, Rücklese Feld 56, 40–80 °C
+    puffer_setpoint:
+      name: "Puffer Soll"
+      icon: mdi:water-boiler
+    # Kessel-Soll (Param. 51 / Feld 27)
+    boiler_setpoint: { name: "Kessel Soll" }
+    # Phase 2d
+    setpoint: { name: "Raum Soll" }                  # Param. 42, im Hydro-Betrieb wohl wirkungslos
+    power: { name: "Leistungsstufe Soll" }           # Param. 36, im Auto-Modus ignoriert (Komponente)
+    chrono_t1: { name: "Chrono T1" }                 # 1108–1110: keine Rücklese, zeigt letzten gesendeten Wert
+    chrono_t2: { name: "Chrono T2" }
+    chrono_t3: { name: "Chrono T3" }
+    sleep: { name: "Sleep" }                         # Param. 57 / Feld 50, roh
+    antifreeze: { name: "Frostschutz" }              # Param. 154 / Feld 60, roh
+    # Temperatureinheit (49/48): nur lesend, gespiegelt in den Sensor „Temperatureinheit“
+    temperature_unit:
+      name: "Temperatureinheit (intern)"
+      internal: true
+      on_value:
+        - lambda: 'id(temp_einheit).publish_state(x);'
+
+switch:
+  - platform: mcz_maestro
+    power: { name: "Ein-Aus" }
+    # Phase 2d (Komponente setzt entity_category config)
+    eco_mode: { name: "Eco-Modus" }          # 41 / Feld 23
+    silent_mode: { name: "Silent-Modus" }    # 45 / Feld 24
+    active_mode: { name: "Active-Modus" }    # 35 / Feld 20
+    chronothermostat: { name: "Chronothermostat" }  # 1111 / Feld 25
+    sounds: { name: "Töne" }                 # 50 / Feld 49
+
+select:
+  - platform: mcz_maestro
+    control_mode: { name: "Regelmodus" }     # 40 / Feld 22, Manual/Auto (= „Dynamik“ in der MCZ-App; Hydro läuft immer in Auto)
+    season_mode: { name: "Sommermodus" }     # 58 / Feld 51
+    fan: { name: "Ventilator" }              # 37 / Feld 2
+    ducted_fan_1: { name: "Kanalventilator 1" }  # 38 / Feld 3
+    ducted_fan_2: { name: "Kanalventilator 2" }  # 39 / Feld 4
+
+button:
+  - platform: mcz_maestro
+    refresh: { name: "Aktualisieren" }
+    set_time: { name: "Uhrzeit setzen" }
+    reset_alarm: { name: "Alarm quittieren" }
+  - platform: restart
+    name: "Neustart ESP"

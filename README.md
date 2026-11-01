@@ -11,6 +11,36 @@ existing serial link.
 > combustion appliance: test remote commands while standing in front of it.
 > Use at your own risk.
 
+## About this fork
+
+Fork of [lexyan/mcz-maestro-esphome](https://github.com/lexyan/mcz-maestro-esphome), maintained by
+[@pvillmann](https://github.com/pvillmann) for an MCZ **hydro** stove (mainboard M°HYDRO 1.44, cloud
+module J5 "WIFI2", ESP-WROOM-02D). Changes compared with upstream:
+
+- **`puffer_setpoint`** number (hydro): buffer tank setpoint, parameter 52 = °C x 2, read back from
+  field 56 (`set_puffer` is that value: 136 = 68 °C). Range 40–80 °C. Found by sniffing the original
+  module; tested on the stove.
+- [`examples/mcz-hydro-de.yaml`](examples/mcz-hydro-de.yaml): a real hydro configuration (German
+  entity names) with notes on how the stove behaves.
+
+Observations on the hydro board, tested on the stove:
+
+- The `power` switch is rejected by the mainboard in automatic mode, with no error reply: check
+  the stove state instead of the command. Only "off" from a burning state leads to *Off* (0); from
+  *Standby* (46) or *Cooling* the stove returns to *Standby*. *Standby* means "on, waiting for heat
+  demand", and the switch reports it as off.
+- The room setpoint (parameter 42) has no effect in hydro operation. A `climate` entity is not
+  useful there and also writes parameter 34, like the `power` switch.
+- `return_temperature` (field 59) gives no usable values on this board.
+
+To use this fork:
+
+```yaml
+external_components:
+  - source: github://pvillmann/mcz-maestro-esphome@main
+    components: [ mcz_maestro ]
+```
+
 ## What you get in Home Assistant
 
 - A thermostat (on/off, setpoint, room temperature, manual/automatic mode)
