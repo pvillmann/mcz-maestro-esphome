@@ -22,6 +22,10 @@ module J5 "WIFI2", ESP-WROOM-02D). Changes compared with upstream:
   module; tested on the stove.
 - [`examples/mcz-hydro-de.yaml`](examples/mcz-hydro-de.yaml): a real hydro configuration (German
   entity names) with notes on how the stove behaves.
+- **Auger revolution counter** in the hydro example: the stove only reports the current auger rpm
+  (`auger_rpm`), no total. The example sums it up on the module (`globals` + `on_value`) and
+  publishes *Schnecke Umdrehungen gesamt* (`total_increasing`, every 30 s). See
+  [Pellet consumption from the auger](#pellet-consumption-from-the-auger).
 
 Observations on the hydro board, tested on the stove:
 
@@ -32,6 +36,24 @@ Observations on the hydro board, tested on the stove:
 - The room setpoint (parameter 42) has no effect in hydro operation. A `climate` entity is not
   useful there and also writes parameter 34, like the `power` switch.
 - `return_temperature` (field 59) gives no usable values on this board.
+
+### Pellet consumption from the auger
+
+Counting auger revolutions gives a direct measure of the pellets fed, independent of the power level.
+Doing it on the module instead of in Home Assistant means nothing is lost while WiFi or Home
+Assistant are down: the module keeps counting and Home Assistant gets the full total afterwards.
+
+- Right Riemann sum over the info frames (every 15 s). If the gap to the previous frame is longer
+  than 1 minute (no link to the mainboard), only 15 s are counted, so an old rpm is not stretched
+  over the gap.
+- The total is a `double` in RTC memory (`restore_value: true`): it survives a reboot or OTA update,
+  but not a power cut. In that case the auger is not running either.
+- In Home Assistant, put a **utility meter** helper (cycle *none*, periodically resetting) on the
+  counter. It treats a drop to 0 as a reset and keeps counting, and with `utility_meter.calibrate`
+  it can continue an older series.
+- kg = revolutions ÷ revolutions per kg. On this stove (hydro, 6 mm pellets) about **15 000–15 700
+  revolutions per kg**, measured over three tank fillings. Keep the conversion in Home Assistant
+  (an `input_number`), so it can be recalibrated without flashing.
 
 To use this fork:
 

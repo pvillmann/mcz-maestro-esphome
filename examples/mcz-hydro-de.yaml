@@ -52,6 +52,21 @@ wifi:
 
 captive_portal:
 
+# Umdrehungen der Förderschnecke, auf dem ESP aufsummiert (Grundlage für den Pelletverbrauch in HA).
+# Der Ofen liefert nur die aktuelle Drehzahl, keinen Zähler. Hier zählt das Modul selbst mit, also
+# auch dann, wenn das WLAN oder HA gerade weg sind. HA bekommt danach den vollen Stand.
+# RTC-Speicher: übersteht Neustart/OTA, nicht Stromausfall (dann läuft auch die Schnecke nicht).
+# HA hängt einen utility_meter dahinter, der einen Rücksprung auf 0 als Reset weiterzählt.
+globals:
+  - id: schnecke_u_gesamt
+    type: double
+    restore_value: true
+    initial_value: '0'
+  - id: schnecke_letzte_ms
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+
 time:
   - platform: homeassistant
     id: ha_time
@@ -82,6 +97,15 @@ sensor:
     name: "Temperatureinheit"
     entity_category: diagnostic
     accuracy_decimals: 0
+  - platform: template
+    name: "Schnecke Umdrehungen gesamt"
+    id: schnecke_umdrehungen_gesamt
+    icon: mdi:screw-lag
+    unit_of_measurement: "U"
+    accuracy_decimals: 0
+    state_class: total_increasing
+    update_interval: 30s
+    lambda: 'return id(schnecke_u_gesamt);'
   - platform: mcz_maestro
     ambient_temperature: { name: "Raumtemperatur" }
     fume_temperature: { name: "Abgastemperatur" }
@@ -89,7 +113,19 @@ sensor:
     state_code: { name: "Zustandscode" }
     board_temperature: { name: "Platinentemperatur" }
     fume_fan_rpm: { name: "Abgasgebläse" }
-    auger_rpm: { name: "Schnecke" }
+    auger_rpm:
+      name: "Schnecke"
+      # Rechte Riemann-Summe über die Info-Rahmen (alle 15 s). Lücke > 1 min (keine Verbindung
+      # zur Hauptplatine): nur 15 s ansetzen statt die alte Drehzahl über die Lücke zu ziehen.
+      on_value:
+        - lambda: |-
+            const uint32_t jetzt = millis();
+            if (id(schnecke_letzte_ms) != 0 && !std::isnan(x) && x > 0) {
+              float dt_min = (jetzt - id(schnecke_letzte_ms)) / 60000.0f;
+              if (dt_min > 1.0f) dt_min = 0.25f;
+              id(schnecke_u_gesamt) += x * dt_min;
+            }
+            id(schnecke_letzte_ms) = jetzt;
     auger_rpm_set: { name: "Schnecke Soll" }
     active_set: { name: "Active Soll" }
     active_live: { name: "Active gemessen" }
